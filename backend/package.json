@@ -13,12 +13,16 @@
   "type": "module",
   "dependencies": {
     "bcryptjs": "^3.0.2",
+    "connect-mongo": "^5.1.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "googleapis": "^156.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.17.1",
     "morgan": "^1.10.1",
+    "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "zod": "^4.0.17"
   }

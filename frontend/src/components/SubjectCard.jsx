@@ -1,37 +1,29 @@
 // src/components/SubjectCard.jsx
-import { useState, useContext } from "react";
-import { AuthContext } from "@/context/AuthContext";
+import { useState } from "react";
 import { markAttendance } from "@/services/attendanceService";
 
+// The component no longer needs useContext or AuthContext
 function SubjectCard({ subject, todaysStatus, onAttendanceUpdate }) {
-  // Initialize state based on props to ensure persistence on refresh
   const [isMarked, setIsMarked] = useState(!!todaysStatus);
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState(
     todaysStatus ? `Marked as ${todaysStatus}` : ""
   );
-  const { token } = useContext(AuthContext);
+  // We no longer need the token from the context
+  // const { token } = useContext(AuthContext);
 
-  // Calculate percentage from the subject prop
   const percentage =
     subject.totalClasses > 0
       ? ((subject.attendedClasses / subject.totalClasses) * 100).toFixed(0)
       : 0;
 
   const handleMarkAttendance = async (status) => {
-    if (!token) {
-      setError("You must be logged in.");
-      return;
-    }
-
     try {
-      await markAttendance(subject._id, status, token);
+      // The service call no longer needs the token passed to it
+      await markAttendance(subject._id, status);
       setIsMarked(true);
       setSuccessMessage(`Marked as ${status}`);
-
-      // Call the function passed down from the DashboardPage
-      // This is the key to the instant UI update
       onAttendanceUpdate(subject._id, status);
     } catch (err) {
       const message = err.response?.data?.message || "An error occurred.";
@@ -42,7 +34,6 @@ function SubjectCard({ subject, todaysStatus, onAttendanceUpdate }) {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md text-slate-800">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-        {/* Left side: Subject Name and Stats */}
         <div>
           <h2 className="text-2xl font-bold">{subject.name}</h2>
           <p className="text-slate-500 font-semibold mt-1">
@@ -51,7 +42,6 @@ function SubjectCard({ subject, todaysStatus, onAttendanceUpdate }) {
           </p>
         </div>
 
-        {/* Right side: Action Buttons */}
         <div className="flex gap-4 mt-4 sm:mt-0">
           <button
             onClick={() => handleMarkAttendance("present")}
@@ -70,18 +60,9 @@ function SubjectCard({ subject, todaysStatus, onAttendanceUpdate }) {
         </div>
       </div>
 
-      {/* Bottom section for notes and messages */}
       <div className="mt-4">
         {isMarked ? (
-          <p
-            className={`font-semibold ${
-              successMessage.includes("absent")
-                ? "text-red-600"
-                : "text-green-600"
-            }`}
-          >
-            {successMessage}
-          </p>
+          <p className="text-green-600 font-semibold">{successMessage}</p>
         ) : (
           <div>
             <label

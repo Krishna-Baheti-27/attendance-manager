@@ -5,42 +5,33 @@ import { AuthContext } from "@/context/AuthContext";
 import { loginUser } from "@/services/authService";
 
 export default function LoginPage() {
-  // State for the form inputs and for displaying errors
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  // Get the login function from our global AuthContext
-  const { login, token } = useContext(AuthContext);
-  // Get the navigate function from react-router to redirect the user
+
+  // We now get the 'user' object from the context, not the token
+  const { login, user } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  // This effect now watches for the user object to change
   useEffect(() => {
-    // If a token exists, it means the user is logged in, so we redirect.
-    if (token) {
+    if (user) {
       navigate("/dashboard");
     }
-  }, [token, navigate]);
+  }, [user, navigate]);
 
-  // This function runs when the form is submitted
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent the default form submission (page reload)
-    setError(""); // Clear any previous errors
-
+    e.preventDefault();
+    setError("");
     try {
-      // Step 1: Call the API service with the user's email and password
-      const data = await loginUser({ email, password });
+      const response = await loginUser({ email, password });
 
-      // Step 2: If the API call is successful, the 'data' will contain our token.
-      // We call the 'login' function from our AuthContext with this token.
-      // This will update the global state and save the token to localStorage.
-      if (data.token) {
-        login(data.token);
-        // Step 3: Redirect the user to their dashboard.
+      // Check for the user object in the response data
+      if (response.user) {
+        // Pass the entire user object to the login function
+        login(response.user);
       }
     } catch (err) {
-      // Step 4: If the API call fails (e.g., wrong password), the authService
-      // throws an error. We catch it here.
-      // The error from axios contains the backend's response.
       const errorMessage =
         err.response?.data?.message || "Login failed. Please try again.";
       setError(errorMessage);

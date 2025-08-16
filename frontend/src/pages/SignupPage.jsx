@@ -1,42 +1,41 @@
-// src/pages/LoginPage.jsx
-import { useState, useContext } from "react";
+// src/pages/SignupPage.jsx
+import { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "@/context/AuthContext";
 import { signupUser } from "@/services/authService";
 
 export default function SignupPage() {
-  // State for the form inputs and for displaying errors
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [error, setError] = useState("");
 
-  // Get the login function from our global AuthContext
-  const { login } = useContext(AuthContext);
-  // Get the navigate function from react-router to redirect the user
+  // Get the 'user' object and 'login' function from the context
+  const { login, user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // This function runs when the form is submitted
+  // This effect watches for the user object to change
+  useEffect(() => {
+    // If a user object exists, it means login/signup was successful, so redirect
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
+
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent the default form submission (page reload)
-    setError(""); // Clear any previous errors
-
+    e.preventDefault();
+    setError("");
     try {
-      // Step 1: Call the API service with the user's email and password
-      const data = await signupUser({ name, email, password });
+      // Call the API service
+      const response = await signupUser({ name, email, password });
 
-      // Step 2: If the API call is successful, the 'data' will contain our token.
-      // We call the 'login' function from our AuthContext with this token.
-      // This will update the global state and save the token to localStorage.
-      if (data.token) {
-        login(data.token);
-        // Step 3: Redirect the user to their dashboard.
-        navigate("/login");
+      // Check for the user object in the response
+      if (response.user) {
+        // Pass the entire user object to the login function
+        // The useEffect will handle the redirection
+        login(response.user);
       }
     } catch (err) {
-      // Step 4: If the API call fails (e.g., wrong password), the authService
-      // throws an error. We catch it here.
-      // The error from axios contains the backend's response.
       const errorMessage =
         err.response?.data?.message || "Signup failed. Please try again.";
       setError(errorMessage);

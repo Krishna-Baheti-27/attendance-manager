@@ -1,16 +1,15 @@
 // src/components/AddSubjectForm.jsx
-import { useState, useContext } from "react";
-import { AuthContext } from "@/context/AuthContext";
+import { useState } from "react";
 import { createSubject } from "@/services/subjectService";
 
+// The component no longer needs useContext or AuthContext
 const AddSubjectForm = ({ onSubjectAdded }) => {
   const [name, setName] = useState("");
-  // State for the new initial attendance fields
   const [initialAttended, setInitialAttended] = useState("");
   const [initialTotal, setInitialTotal] = useState("");
-
   const [error, setError] = useState("");
-  const { token } = useContext(AuthContext);
+  // We no longer need the token from the context
+  // const { token } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,23 +17,20 @@ const AddSubjectForm = ({ onSubjectAdded }) => {
       setError("Subject name cannot be empty.");
       return;
     }
-    // Basic validation for the numbers
     if (Number(initialAttended) > Number(initialTotal)) {
       setError("Attended classes cannot be greater than total classes.");
       return;
     }
 
     try {
-      // Pass the new values to the service function
+      // The service call no longer needs the token passed to it
       const newSubject = await createSubject(
         name,
-        token,
         initialAttended,
         initialTotal
       );
       onSubjectAdded(newSubject);
 
-      // Reset all form fields
       setName("");
       setInitialAttended("");
       setInitialTotal("");
@@ -54,7 +50,6 @@ const AddSubjectForm = ({ onSubjectAdded }) => {
         Add a New Subject
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Subject Name Input */}
         <div className="md:col-span-3">
           <label
             htmlFor="subjectName"
@@ -72,7 +67,6 @@ const AddSubjectForm = ({ onSubjectAdded }) => {
           />
         </div>
 
-        {/* Initial Attended Input */}
         <div>
           <label
             htmlFor="initialAttended"
@@ -91,7 +85,6 @@ const AddSubjectForm = ({ onSubjectAdded }) => {
           />
         </div>
 
-        {/* Initial Total Input */}
         <div>
           <label
             htmlFor="initialTotal"
@@ -110,7 +103,6 @@ const AddSubjectForm = ({ onSubjectAdded }) => {
           />
         </div>
 
-        {/* Submit Button */}
         <div className="flex items-end">
           <button
             type="submit"

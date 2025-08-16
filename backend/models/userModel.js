@@ -1,16 +1,13 @@
+// models/userModel.js
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-const Schema = mongoose.Schema;
-const ObjectId = Schema.ObjectId;
 
-const userSchema = new Schema(
+const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
       trim: true,
-      minlength: 3,
-      maxlength: 30,
     },
     email: {
       type: String,
@@ -18,18 +15,18 @@ const userSchema = new Schema(
       unique: true,
       trim: true,
       lowercase: true,
-      minlength: 3,
-      maxlength: 30,
-      match: [
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/, // simple email regex
-        "Please enter a valid email address",
-      ],
     },
     password: {
       type: String,
-      required: true,
+      // --- THIS IS THE FIX ---
+      // The 'required' property is now a function.
+      // It returns 'true' (meaning required) only if there is NO googleId.
+      required: function () {
+        return !this.googleId;
+      },
+      // --- END OF FIX ---
       minlength: 6,
-      select: false, // Don't return password in queries
+      select: false,
     },
     googleId: {
       type: String,
@@ -50,18 +47,18 @@ const userSchema = new Schema(
   }
 );
 
+// Password hashing logic (remains the same)
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
+  if (!this.isModified("password") || !this.password) {
     return next();
-  } // if the password is not changed we do not hash again
+  }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  // in place of the original password, we store the hashed one
 });
 
+// Password matching logic (remains the same)
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  const result = await bcrypt.compare(enteredPassword, this.password);
-  return result;
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
 const User = mongoose.model("User", userSchema);

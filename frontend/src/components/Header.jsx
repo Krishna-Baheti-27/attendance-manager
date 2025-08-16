@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "@/context/AuthContext";
 
 function Header() {
-  const { user, logout, token } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
   // This function handles the logout process
@@ -22,7 +22,7 @@ function Header() {
 
         {/* Navigation Links */}
         <nav className="flex items-center gap-4">
-          {token ? (
+          {user ? (
             // If a token exists, show the Logout button
             <button
               onClick={handleLogout}

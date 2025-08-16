@@ -1,33 +1,14 @@
-import User from "../models/userModel.js";
-import jwt from "jsonwebtoken";
+// middleware/authMiddleware.js
 
-export async function protect(req, res, next) {
-  let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    try {
-      token = req.headers.authorization.split(" ")[1];
-
-      const decodedData = jwt.verify(token, process.env.JWT_SECRET);
-      const foundUser = await User.findById(decodedData.id).select("-password");
-      if (foundUser) {
-        req.user = foundUser;
-        next();
-      }
-    } catch (err) {
-      console.log(err);
-      return res.status(401).json({
-        success: "false",
-        message: "Not authorized, token failed",
-      });
-    }
+// This is the middleware for protecting routes that require a logged-in user (via session)
+export const protect = (req, res, next) => {
+  // Passport.js attaches the req.isAuthenticated() function to the request object.
+  // It returns true if the user has a valid, active session (i.e., they are logged in).
+  if (req.isAuthenticated()) {
+    // If they are authenticated, just proceed to the next function (the controller)
+    return next();
+  } else {
+    // If they are not authenticated, send a 401 Unauthorized error
+    res.status(401).json({ success: false, message: "Not authorized" });
   }
-  if (!token) {
-    return res.status(401).json({
-      success: "false",
-      message: "Not authorized, no token found",
-    });
-  }
-}
+};
