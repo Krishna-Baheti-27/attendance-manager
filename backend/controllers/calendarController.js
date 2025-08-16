@@ -2,32 +2,42 @@
 import { google } from "googleapis";
 import Subject from "../models/subjectModel.js";
 
-// This is the main function that will create the event
+// Helper: parse "Attendance Status: PRESENT/ABSENT" and "Note: ..." from description
+function parseDescription(desc = "") {
+  const out = { status: undefined, note: "" };
+  if (!desc) return out;
+
+  // Try to find "Attendance Status: PRESENT/ABSENT"
+  const statusMatch = desc.match(/attendance\s*status:\s*(present|absent)/i);
+  if (statusMatch) out.status = statusMatch[1].toLowerCase();
+
+  // Try to find "Note: <anything to end>"
+  const noteMatch = desc.match(/note:\s*(.+)/i);
+  if (noteMatch) out.note = noteMatch[1].trim();
+
+  return out;
+}
+
+// ===== CREATE SCHEDULE =====
 export const createSchedule = async (req, res) => {
   try {
-    // 1. Get the necessary data
-    // The user object is attached by our session middleware
     const user = req.user;
-    const { subjectId, days, startTime, endTime } = req.body;
+    const { subjectId, days, startTime, endTime, status, note } = req.body;
 
-    // 2. Check if we have the required Google tokens
-    if (!user.googleAccessToken) {
+    if (!user?.googleAccessToken) {
       return res.status(400).json({ message: "Google account not connected." });
     }
 
-    // 3. Find the subject to get its name
     const subject = await Subject.findById(subjectId);
     if (!subject) {
       return res.status(404).json({ message: "Subject not found." });
     }
 
-    // 4. Set up the Google API client
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      "/api/v1/auth/google/callback" // Your redirect URI
+      "/api/v1/auth/google/callback"
     );
-    // Set the user's tokens for this request
     oauth2Client.setCredentials({
       access_token: user.googleAccessToken,
       refresh_token: user.googleRefreshToken,
@@ -35,31 +45,31 @@ export const createSchedule = async (req, res) => {
 
     const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
-    // 5. Construct the event object for Google Calendar
     const event = {
-      summary: subject.name, // This is the title of the event
+      summary: subject.name,
       description: "Class for Attend.ly attendance tracking.",
       start: {
-        // We need a full date-time string, so we find the next upcoming class day
         dateTime: getNextDateTime(days[0], startTime),
-        timeZone: "Asia/Kolkata", // You can make this dynamic later
+        timeZone: "Asia/Kolkata",
       },
       end: {
         dateTime: getNextDateTime(days[0], endTime),
         timeZone: "Asia/Kolkata",
       },
-      // This is the magic part: the recurrence rule
-      recurrence: [
-        `RRULE:FREQ=WEEKLY;BYDAY=${days.join(",")}`, // e.g., "RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR"
-      ],
-      // Add a 30-minute reminder
+      recurrence: [`RRULE:FREQ=WEEKLY;BYDAY=${days.join(",")}`],
       reminders: {
         useDefault: false,
         overrides: [{ method: "popup", minutes: 30 }],
       },
+      // ✅ Store attendance metadata so we can color on the frontend
+      extendedProperties: {
+        private: {
+          status: (status || "present").toLowerCase(), // "present" | "absent" | anything
+          note: note || "",
+        },
+      },
     };
 
-    // 6. Insert the event into the user's primary calendar
     await calendar.events.insert({
       calendarId: "primary",
       resource: event,
@@ -76,7 +86,6 @@ export const createSchedule = async (req, res) => {
   }
 };
 
-// Helper function to get the correct date-time for the first event
 function getNextDateTime(dayOfWeek, time) {
   const [hour, minute] = time.split(":");
   const now = new Date();
@@ -87,10 +96,72 @@ function getNextDateTime(dayOfWeek, time) {
   resultDate.setDate(now.getDate() + ((targetDay - now.getDay() + 7) % 7));
   resultDate.setHours(hour, minute, 0, 0);
 
-  // If the calculated time is in the past, move to the next week
   if (resultDate < now) {
     resultDate.setDate(resultDate.getDate() + 7);
   }
 
   return resultDate.toISOString();
 }
+
+// ===== LIST EVENTS =====
+export const getCalendarEvents = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user?.googleAccessToken) {
+      return res.status(400).json({ message: "Google account not connected." });
+    }
+
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      "/api/v1/auth/google/callback"
+    );
+    oauth2Client.setCredentials({
+      access_token: user.googleAccessToken,
+      refresh_token: user.googleRefreshToken,
+    });
+
+    const calendar = google.calendar({ version: "v3", auth: oauth2Client });
+
+    const response = await calendar.events.list({
+      calendarId: "primary",
+      timeMin: new Date(
+        new Date().setMonth(new Date().getMonth() - 1)
+      ).toISOString(),
+      timeMax: new Date(
+        new Date().setMonth(new Date().getMonth() + 1)
+      ).toISOString(),
+      singleEvents: true,
+      orderBy: "startTime",
+    });
+
+    const events = (response.data.items || []).map((event) => {
+      const desc = event.description || "";
+      const metaStatus =
+        event.extendedProperties?.private?.status?.toLowerCase();
+      const metaNote = event.extendedProperties?.private?.note || "";
+      const parsed = parseDescription(desc);
+
+      // Prefer metadata; fall back to parsed description
+      const status = metaStatus || parsed.status || null;
+      const note = metaNote || parsed.note || "";
+
+      return {
+        id: event.id,
+        title: event.summary,
+        start: event.start?.dateTime || event.start?.date,
+        end: event.end?.dateTime || event.end?.date,
+        description: desc,
+        status, // "present" | "absent" | null
+        note,
+      };
+    });
+
+    res.status(200).json({ success: true, data: events });
+  } catch (error) {
+    console.error("Error fetching calendar events:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch events." });
+  }
+};

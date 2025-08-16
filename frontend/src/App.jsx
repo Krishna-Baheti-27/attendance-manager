@@ -11,6 +11,7 @@ import Header from "./components/Header";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import DashboardPage from "./pages/DashboardPage";
+import CalendarPage from "./pages/CalendarPage";
 
 function App() {
   // Get the user and loading state from the context
@@ -34,6 +35,7 @@ function App() {
             // --- Routes accessible only when LOGGED IN ---
             <>
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/calendar" element={<CalendarPage />} />
               {/* Redirect any other path to the dashboard */}
               <Route path="*" element={<Navigate to="/dashboard" />} />
             </>

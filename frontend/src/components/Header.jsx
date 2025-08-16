@@ -23,15 +23,28 @@ function Header() {
         {/* Navigation Links */}
         <nav className="flex items-center gap-4">
           {user ? (
-            // If a token exists, show the Logout button
-            <button
-              onClick={handleLogout}
-              className="bg-neutral-800 text-white font-semibold py-2 px-4 hover:bg-neutral-700 transition-colors"
-            >
-              Logout
-            </button>
+            // Add a React Fragment wrapper here
+            <>
+              <Link
+                to="/dashboard"
+                className="text-neutral-300 hover:text-white"
+              >
+                Dashboard
+              </Link>
+              <Link
+                to="/calendar"
+                className="text-neutral-300 hover:text-white"
+              >
+                Calendar
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="bg-neutral-800 text-white font-semibold py-2 px-4 hover:bg-neutral-700 transition-colors"
+              >
+                Logout
+              </button>
+            </> // Close the fragment
           ) : (
-            // If no token, show Sign In and Sign Up
             <>
               <Link
                 to="/login"

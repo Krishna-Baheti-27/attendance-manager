@@ -17,6 +17,8 @@ const daysOfWeek = [
   { id: "WE", label: "Wed" },
   { id: "TH", label: "Thu" },
   { id: "FR", label: "Fri" },
+  { id: "SA", label: "Sat" },
+  { id: "SU", label: "Sun" },
 ];
 
 const ScheduleModal = ({ subject, isOpen, onClose }) => {

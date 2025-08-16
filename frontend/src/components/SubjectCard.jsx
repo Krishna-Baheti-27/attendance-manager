@@ -2,16 +2,13 @@
 import { useState } from "react";
 import { markAttendance } from "@/services/attendanceService";
 
-// The component no longer needs useContext or AuthContext
 function SubjectCard({ subject, todaysStatus, onAttendanceUpdate }) {
   const [isMarked, setIsMarked] = useState(!!todaysStatus);
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState(""); // This state will hold the note
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState(
     todaysStatus ? `Marked as ${todaysStatus}` : ""
   );
-  // We no longer need the token from the context
-  // const { token } = useContext(AuthContext);
 
   const percentage =
     subject.totalClasses > 0
@@ -20,8 +17,9 @@ function SubjectCard({ subject, todaysStatus, onAttendanceUpdate }) {
 
   const handleMarkAttendance = async (status) => {
     try {
-      // The service call no longer needs the token passed to it
-      await markAttendance(subject._id, status);
+      // Pass the 'note' from the component's state to the service function
+      await markAttendance(subject._id, status, note);
+
       setIsMarked(true);
       setSuccessMessage(`Marked as ${status}`);
       onAttendanceUpdate(subject._id, status);
@@ -41,7 +39,6 @@ function SubjectCard({ subject, todaysStatus, onAttendanceUpdate }) {
             {percentage}%)
           </p>
         </div>
-
         <div className="flex gap-4 mt-4 sm:mt-0">
           <button
             onClick={() => handleMarkAttendance("present")}
@@ -59,10 +56,17 @@ function SubjectCard({ subject, todaysStatus, onAttendanceUpdate }) {
           </button>
         </div>
       </div>
-
       <div className="mt-4">
         {isMarked ? (
-          <p className="text-green-600 font-semibold">{successMessage}</p>
+          <p
+            className={`font-semibold ${
+              successMessage.includes("absent")
+                ? "text-red-600"
+                : "text-green-600"
+            }`}
+          >
+            {successMessage}
+          </p>
         ) : (
           <div>
             <label

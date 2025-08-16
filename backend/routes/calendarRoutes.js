@@ -1,12 +1,19 @@
 // routes/calendarRoutes.js
 import express from "express";
-import { createSchedule } from "../controllers/calendarController.js";
-import { protect } from "../middlewares/authMiddleware.js"; // You'll need to create this middleware
+import {
+  createSchedule,
+  getCalendarEvents,
+} from "../controllers/calendarController.js";
+import { protect } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-// This route will be protected. The 'protect' middleware will check
-// if the user is logged in via session before running createSchedule.
+// Route to create a new recurring schedule
+// POST /api/v1/calendar/schedule
 router.post("/schedule", protect, createSchedule);
+
+// Route to get all calendar events for the user
+// GET /api/v1/calendar/events
+router.get("/events", protect, getCalendarEvents);
 
 export default router;
