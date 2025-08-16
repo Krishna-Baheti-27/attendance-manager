@@ -1,66 +1,157 @@
 // controllers/subjectsController.js
 import Subject from "../models/subjectModel.js";
-import Attendance from "../models/attendanceModel.js"; // 1. Import the Attendance model
+import Attendance from "../models/attendanceModel.js";
 
 export async function createSubject(req, res) {
   try {
-    const { name } = req.body;
+    const { name, initialAttended, initialTotal } = req.body;
     const userId = req.user._id;
+
+    // 1. Create the new subject
     const subject = await Subject.create({
       name,
       user: userId,
     });
-    // Send back the newly created subject
+
+    // 2. If initial attendance numbers are provided, create the historical records
+    if (initialAttended > 0 || initialTotal > 0) {
+      const attendedCount = Number(initialAttended) || 0;
+      const totalCount = Number(initialTotal) || 0;
+      const absentCount = totalCount - attendedCount;
+
+      const attendanceRecords = [];
+      const today = new Date();
+
+      // Create "present" records with past dates
+      for (let i = 0; i < attendedCount; i++) {
+        attendanceRecords.push({
+          subject: subject._id,
+          user: userId,
+          status: "present",
+          // Set a past date to avoid conflicts with future attendance
+          date: new Date(new Date().setDate(today.getDate() - (i + 1))),
+        });
+      }
+
+      // Create "absent" records with past dates
+      for (let i = 0; i < absentCount; i++) {
+        attendanceRecords.push({
+          subject: subject._id,
+          user: userId,
+          status: "absent",
+          date: new Date(
+            new Date().setDate(today.getDate() - (attendedCount + i + 1))
+          ),
+        });
+      }
+
+      // Insert all records into the database in one efficient operation
+      if (attendanceRecords.length > 0) {
+        await Attendance.insertMany(attendanceRecords);
+      }
+    }
+
+    // 3. Return the new subject with its stats pre-calculated
+    // This ensures the UI updates correctly without needing a refresh
+    const newSubjectWithStats = {
+      _id: subject._id,
+      name: subject.name,
+      user: subject.user,
+      attendedClasses: Number(initialAttended) || 0,
+      totalClasses: Number(initialTotal) || 0,
+      todaysStatus: null, // It's a new subject, so no status for today
+    };
+
     return res.status(201).json({
       success: true,
-      data: subject,
+      data: newSubjectWithStats,
     });
   } catch (error) {
+    console.error("Error in createSubject:", error);
     res
       .status(400)
       .json({ success: false, message: "Failed to create subject" });
   }
 }
 
+// The getAllSubjects function remains the same as before
 export async function getAllSubjects(req, res) {
   try {
-    // Get all subjects for the user
-    const subjects = await Subject.find({
-      user: req.user._id,
-    }).lean(); // Use .lean() for better performance
+    const userId = req.user._id;
 
-    // --- This is the new logic to fix the refresh issue ---
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date();
-    todayEnd.setHours(23, 59, 59, 999);
-
-    // Find all of today's attendance records for this user in one go
-    const todaysAttendances = await Attendance.find({
-      user: req.user._id,
-      date: { $gte: todayStart, $lt: todayEnd },
-    });
-
-    // Map the attendance records to their subject IDs for easy lookup
-    const attendanceMap = new Map();
-    todaysAttendances.forEach((att) => {
-      attendanceMap.set(att.subject.toString(), att.status);
-    });
-
-    // Add the 'todaysStatus' to each subject
-    const subjectsWithStatus = subjects.map((subject) => {
-      return {
-        ...subject,
-        todaysStatus: attendanceMap.get(subject._id.toString()) || null,
-      };
-    });
-    // --- End of new logic ---
+    const subjectsWithStats = await Subject.aggregate([
+      { $match: { user: userId } },
+      {
+        $lookup: {
+          from: "attendances",
+          localField: "_id",
+          foreignField: "subject",
+          as: "attendanceRecords",
+        },
+      },
+      {
+        $project: {
+          name: 1,
+          user: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          totalClasses: {
+            $size: {
+              $filter: {
+                input: "$attendanceRecords",
+                as: "att",
+                cond: { $in: ["$$att.status", ["present", "absent"]] },
+              },
+            },
+          },
+          attendedClasses: {
+            $size: {
+              $filter: {
+                input: "$attendanceRecords",
+                as: "att",
+                cond: { $eq: ["$$att.status", "present"] },
+              },
+            },
+          },
+          todaysStatus: {
+            $let: {
+              vars: {
+                todayRecord: {
+                  $filter: {
+                    input: "$attendanceRecords",
+                    as: "att",
+                    cond: {
+                      $and: [
+                        {
+                          $gte: [
+                            "$$att.date",
+                            new Date(new Date().setHours(0, 0, 0, 0)),
+                          ],
+                        },
+                        {
+                          $lt: [
+                            "$$att.date",
+                            new Date(new Date().setHours(23, 59, 59, 999)),
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+              in: { $arrayElemAt: ["$$todayRecord.status", 0] },
+            },
+          },
+        },
+      },
+    ]);
 
     return res.json({
       success: true,
-      data: subjectsWithStatus, // Send back the combined data
+      data: subjectsWithStats,
     });
   } catch (error) {
+    console.error("Error fetching subjects with stats:", error);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 }

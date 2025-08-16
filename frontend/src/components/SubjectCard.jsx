@@ -3,21 +3,21 @@ import { useState, useContext } from "react";
 import { AuthContext } from "@/context/AuthContext";
 import { markAttendance } from "@/services/attendanceService";
 
-// The component now accepts 'todaysStatus' as a prop
-function SubjectCard({ subject, todaysStatus }) {
-  // --- THIS IS THE FIX ---
-  // Initialize the 'isMarked' state based on the prop.
-  // If 'todaysStatus' is 'present' or 'absent', it will be true. Otherwise, false.
+function SubjectCard({ subject, todaysStatus, onAttendanceUpdate }) {
+  // Initialize state based on props to ensure persistence on refresh
   const [isMarked, setIsMarked] = useState(!!todaysStatus);
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
-  // Also initialize the success message based on the prop
   const [successMessage, setSuccessMessage] = useState(
     todaysStatus ? `Marked as ${todaysStatus}` : ""
   );
-  // --- END OF FIX ---
-
   const { token } = useContext(AuthContext);
+
+  // Calculate percentage from the subject prop
+  const percentage =
+    subject.totalClasses > 0
+      ? ((subject.attendedClasses / subject.totalClasses) * 100).toFixed(0)
+      : 0;
 
   const handleMarkAttendance = async (status) => {
     if (!token) {
@@ -29,6 +29,10 @@ function SubjectCard({ subject, todaysStatus }) {
       await markAttendance(subject._id, status, token);
       setIsMarked(true);
       setSuccessMessage(`Marked as ${status}`);
+
+      // Call the function passed down from the DashboardPage
+      // This is the key to the instant UI update
+      onAttendanceUpdate(subject._id, status);
     } catch (err) {
       const message = err.response?.data?.message || "An error occurred.";
       setError(message);
@@ -37,9 +41,18 @@ function SubjectCard({ subject, todaysStatus }) {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md text-slate-800">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">{subject.name}</h2>
-        <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
+        {/* Left side: Subject Name and Stats */}
+        <div>
+          <h2 className="text-2xl font-bold">{subject.name}</h2>
+          <p className="text-slate-500 font-semibold mt-1">
+            Attendance: {subject.attendedClasses} / {subject.totalClasses} (
+            {percentage}%)
+          </p>
+        </div>
+
+        {/* Right side: Action Buttons */}
+        <div className="flex gap-4 mt-4 sm:mt-0">
           <button
             onClick={() => handleMarkAttendance("present")}
             disabled={isMarked}
@@ -57,6 +70,7 @@ function SubjectCard({ subject, todaysStatus }) {
         </div>
       </div>
 
+      {/* Bottom section for notes and messages */}
       <div className="mt-4">
         {isMarked ? (
           <p
