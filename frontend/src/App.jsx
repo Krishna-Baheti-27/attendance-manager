@@ -12,6 +12,7 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import DashboardPage from "./pages/DashboardPage";
 import CalendarPage from "./pages/CalendarPage";
+import Navbar from "./components/Navbar";
 
 function App() {
   // Get the user and loading state from the context
@@ -28,7 +29,7 @@ function App() {
 
   return (
     <Router>
-      <Header />
+      <Navbar />
       <main>
         <Routes>
           {user ? (

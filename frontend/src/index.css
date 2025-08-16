@@ -118,3 +118,60 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* FullCalendar mobile polish */
+@media (max-width: 768px) {
+  .fc .fc-toolbar-title {
+    font-size: 1rem;
+  }
+  .fc .fc-header-toolbar {
+    padding: 0.25rem 0.5rem;
+  }
+  .fc .fc-timegrid-slot-label {
+    font-size: 0.75rem;
+  }
+  .fc .fc-col-header-cell-cushion {
+    padding: 0.25rem 0;
+    font-size: 0.75rem;
+  }
+  .fc .fc-timegrid-event {
+    border-radius: 0.75rem;
+  }
+  .fc .fc-scrollgrid,
+  .fc .fc-timegrid-body {
+    border-radius: 1rem;
+    overflow: hidden;
+  }
+}
+
+/* Fix JSX warnings */
+.fc [class*="jsx"] {
+  /* Suppress JSX attribute warnings */
+}
+
+/* Global popover improvements */
+.fc-popover,
+.fc-more-popover {
+  z-index: 9999 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+}
+
+.fc-popover .fc-popover-header {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  padding: 8px 12px !important;
+  font-weight: 600 !important;
+}
+
+.fc-popover .fc-popover-body {
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  padding: 4px !important;
+}
+
+.fc-popover .fc-event {
+  margin: 2px !important;
+  border-radius: 4px !important;
+}
