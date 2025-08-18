@@ -84,13 +84,15 @@ export const createSchedule = async (req, res) => {
   }
 };
 
-function getNextDateTime(dayOfWeek, time) {
+function getNextDateTime(dayOfWeek, time, timeZone) {
   const [hour, minute] = time.split(":");
-  const now = new Date();
+  // Use Intl.DateTimeFormat to work with timezones correctly
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone }));
+
   const dayMap = { MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6, SU: 0 };
   const targetDay = dayMap[dayOfWeek];
 
-  let resultDate = new Date();
+  let resultDate = new Date(now);
   resultDate.setDate(now.getDate() + ((targetDay - now.getDay() + 7) % 7));
   resultDate.setHours(hour, minute, 0, 0);
 
@@ -98,7 +100,14 @@ function getNextDateTime(dayOfWeek, time) {
     resultDate.setDate(resultDate.getDate() + 7);
   }
 
-  return resultDate.toISOString();
+  // Manually construct the ISO string with the correct timezone offset for IST (+05:30)
+  const year = resultDate.getFullYear();
+  const month = String(resultDate.getMonth() + 1).padStart(2, "0");
+  const day = String(resultDate.getDate()).padStart(2, "0");
+  const hours = String(resultDate.getHours()).padStart(2, "0");
+  const minutes = String(resultDate.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:00+05:30`;
 }
 
 // list the events
