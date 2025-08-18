@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
     const checkLoggedIn = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3000/api/v1/auth/me",
+          `${import.meta.env.VITE_API_URL}/api/v1/auth/me`,
           {
             withCredentials: true,
           }
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await axios.post(
-        "http://localhost:3000/api/v1/auth/logout",
+        `${import.meta.env.VITE_API_URL}/api/v1/auth/logout`,
         {},
         {
           withCredentials: true,

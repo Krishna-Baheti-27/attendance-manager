@@ -10,7 +10,6 @@ const Navbar = () => {
 
   function handleLogout() {
     logout();
-    navigate("/login");
   }
 
   return (
@@ -21,35 +20,44 @@ const Navbar = () => {
           Attend.<span className="text-green-400">ly</span>
         </Link>
 
-        {/* Desktop Links */}
         <div className="hidden sm:flex items-center gap-8 font-medium">
-          <Link to="/dashboard" className="hover:text-green-400 transition">
-            Dashboard
-          </Link>
-          <Link to="/calendar" className="hover:text-green-400 transition">
-            Calendar
-          </Link>
-
-          {user && (
-            <div className="flex items-center gap-4 pl-6 border-l border-gray-700">
-              {/* Avatar */}
-              <div className="w-9 h-9 flex items-center justify-center rounded-full bg-green-500 font-bold text-sm">
-                {user.name?.charAt(0).toUpperCase()}
+          {user ? (
+            // If user is logged in, show these links
+            <>
+              <Link to="/dashboard" className="hover:text-green-400 transition">
+                Dashboard
+              </Link>
+              <Link to="/calendar" className="hover:text-green-400 transition">
+                Calendar
+              </Link>
+              <div className="flex items-center gap-4 pl-6 border-l border-gray-700">
+                <div className="w-9 h-9 flex items-center justify-center rounded-full bg-green-500 font-bold text-sm">
+                  {user.name?.charAt(0).toUpperCase()}
+                </div>
+                <span className="max-w-[120px] truncate">{user.name}</span>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleLogout}
+                  className="bg-red-500 text-white font-medium py-2 px-3 rounded-lg shadow hover:bg-red-600 transition-colors"
+                >
+                  Logout
+                </motion.button>
               </div>
-
-              {/* Name */}
-              <span className="max-w-[120px] truncate">{user.name}</span>
-
-              {/* Logout */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleLogout}
-                className="bg-red-500 text-white font-medium py-2 px-3 rounded-lg shadow hover:bg-red-600 transition-colors"
+            </>
+          ) : (
+            // If user is logged out, show these links
+            <>
+              <Link to="/login" className="hover:text-green-400 transition">
+                Sign In
+              </Link>
+              <Link
+                to="/signup"
+                className="bg-green-500 text-black font-bold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors"
               >
-                Logout
-              </motion.button>
-            </div>
+                Sign Up
+              </Link>
+            </>
           )}
         </div>
 
@@ -62,7 +70,6 @@ const Navbar = () => {
         </button>
       </div>
 
-      {/* Mobile Dropdown */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -71,44 +78,57 @@ const Navbar = () => {
             exit={{ opacity: 0, y: -10 }}
             className="sm:hidden mt-3 flex flex-col gap-3 pb-3"
           >
-            <Link
-              to="/dashboard"
-              className="block px-2 py-2 rounded hover:bg-slate-800"
-              onClick={() => setIsOpen(false)}
-            >
-              Dashboard
-            </Link>
-            <Link
-              to="/calendar"
-              className="block px-2 py-2 rounded hover:bg-slate-800"
-              onClick={() => setIsOpen(false)}
-            >
-              Calendar
-            </Link>
-
-            {user && (
-              <div className="flex items-center justify-between px-2">
-                {/* Avatar + Name */}
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-500 font-bold text-sm">
-                    {user.name?.charAt(0).toUpperCase()}
-                  </div>
-                  <span>{user.name}</span>
-                </div>
-
-                {/* Logout */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    setIsOpen(false);
-                    handleLogout();
-                  }}
-                  className="bg-red-500 text-white font-semibold py-1 px-3 rounded-lg shadow hover:bg-red-600 transition-colors"
+            {user ? (
+              <>
+                <Link
+                  to="/dashboard"
+                  className="block px-2 py-2 rounded hover:bg-slate-800"
+                  onClick={() => setIsOpen(false)}
                 >
-                  Logout
-                </motion.button>
-              </div>
+                  Dashboard
+                </Link>
+                <Link
+                  to="/calendar"
+                  className="block px-2 py-2 rounded hover:bg-slate-800"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Calendar
+                </Link>
+                <div className="flex items-center justify-between px-2 pt-2 mt-2 border-t border-gray-700">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-500 font-bold text-sm">
+                      {user.name?.charAt(0).toUpperCase()}
+                    </div>
+                    <span>{user.name}</span>
+                  </div>
+                  <motion.button
+                    onClick={() => {
+                      setIsOpen(false);
+                      handleLogout();
+                    }}
+                    className="bg-red-500 text-white font-semibold py-1 px-3 rounded-lg shadow"
+                  >
+                    Logout
+                  </motion.button>
+                </div>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="block px-2 py-2 rounded hover:bg-slate-800"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/signup"
+                  className="block px-2 py-2 rounded hover:bg-slate-800"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Sign Up
+                </Link>
+              </>
             )}
           </motion.div>
         )}

@@ -73,6 +73,8 @@ const DashboardPage = () => {
       </div>
     );
 
+  const backendUrl = import.meta.env.VITE_API_URL;
+
   return (
     <div className="bg-slate-100 min-h-screen">
       <div className="container mx-auto p-4 sm:p-6">
@@ -93,7 +95,7 @@ const DashboardPage = () => {
               <motion.a
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                href="http://localhost:3000/api/v1/auth/google"
+                href={`${backendUrl}/api/v1/auth/google`}
                 className="inline-block bg-blue-500 text-white font-semibold py-2 px-6 rounded-lg shadow hover:bg-blue-600 transition-colors"
               >
                 Connect Google Calendar
