@@ -1,13 +1,11 @@
-// controllers/authController.js
 import { z } from "zod";
 import User from "../models/userModel.js";
 import { signupSchema, loginSchema } from "../utils/zodValidation.js";
 
-// --- SIGNUP (Updated for Sessions) ---
 export async function signup(req, res, next) {
   try {
     const validatedData = signupSchema.parse(req.body);
-    const { name, email, password } = validatedData;
+    const { name, email, password } = validatedData; // zod validated data
 
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -24,7 +22,6 @@ export async function signup(req, res, next) {
       if (err) {
         return next(err);
       }
-      // Send back the user object, not a token
       return res.status(201).json({
         success: true,
         user: user,
@@ -32,6 +29,7 @@ export async function signup(req, res, next) {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      // zod error
       return res.status(400).json({ success: false, errors: error.errors });
     }
     return res.status(500).json({
@@ -41,13 +39,13 @@ export async function signup(req, res, next) {
   }
 }
 
-// --- LOGIN (Updated for Sessions) ---
 export async function login(req, res, next) {
   try {
     const validatedData = loginSchema.parse(req.body);
     const { email, password } = validatedData;
 
     const user = await User.findOne({ email }).select("+password");
+    // do this because by default we have set select as false for password
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -57,12 +55,10 @@ export async function login(req, res, next) {
 
     const isMatched = await user.matchPassword(password);
     if (isMatched) {
-      // Use req.login() to establish a session
       req.login(user, (err) => {
         if (err) {
           return next(err);
         }
-        // Send back the user object, not a token
         return res.status(200).json({
           success: true,
           user: user,
@@ -85,19 +81,15 @@ export async function login(req, res, next) {
   }
 }
 
-// --- NEW FUNCTION: Get Current User ---
 export const getMe = (req, res) => {
   // req.user is populated by passport if a valid session exists
   if (req.user) {
     res.status(200).json({ success: true, user: req.user });
   } else {
-    // This case is technically handled by the 'protect' middleware,
-    // but it's good practice to have a fallback.
     res.status(401).json({ success: false, message: "Not authenticated" });
   }
 };
 
-// --- NEW FUNCTION: Logout User ---
 export const logout = (req, res, next) => {
   // req.logout() is a Passport function to terminate the session
   req.logout((err) => {

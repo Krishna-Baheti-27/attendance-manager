@@ -10,6 +10,7 @@ async function startServer() {
     await mongoose.connect(DB);
     console.log(`DB connection successful`);
     app.listen(PORT, () => {
+      // only start the server if database connection is successful
       console.log(`Server listening on port ${PORT}...`);
     });
   } catch (err) {

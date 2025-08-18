@@ -1,4 +1,3 @@
-// src/pages/DashboardPage.jsx
 import { useContext, useEffect, useState } from "react";
 import { getAllSubjects } from "@/services/subjectService";
 import { AuthContext } from "@/context/AuthContext";
@@ -6,7 +5,6 @@ import SubjectCard from "@/components/SubjectCard";
 import AddSubjectForm from "@/components/AddSubjectForm";
 import ScheduleModal from "@/components/ScheduleModal";
 import { motion, AnimatePresence } from "framer-motion";
-import Navbar from "@/components/Navbar";
 
 const DashboardPage = () => {
   const [subjects, setSubjects] = useState([]);
@@ -78,7 +76,6 @@ const DashboardPage = () => {
   return (
     <div className="bg-slate-100 min-h-screen">
       <div className="container mx-auto p-4 sm:p-6">
-        {/* Google Calendar Connection Card */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

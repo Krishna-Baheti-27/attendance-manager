@@ -18,13 +18,9 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      // --- THIS IS THE FIX ---
-      // The 'required' property is now a function.
-      // It returns 'true' (meaning required) only if there is NO googleId.
       required: function () {
         return !this.googleId;
-      },
-      // --- END OF FIX ---
+      }, // only required if there is no googleId
       minlength: 6,
       select: false,
     },
@@ -47,7 +43,7 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Password hashing logic (remains the same)
+// hash the password before saving
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password") || !this.password) {
     return next();
@@ -56,7 +52,7 @@ userSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Password matching logic (remains the same)
+// Password matching logic
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };

@@ -1,4 +1,3 @@
-// src/pages/SignupPage.jsx
 import { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "@/context/AuthContext";
@@ -10,17 +9,15 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // Get the 'user' object and 'login' function from the context
   const { login, user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // This effect watches for the user object to change
   useEffect(() => {
     // If a user object exists, it means login/signup was successful, so redirect
     if (user) {
       navigate("/dashboard");
     }
-  }, [user, navigate]);
+  }, [user, navigate]); // fired according to changes in user and navigate
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,8 +28,6 @@ export default function SignupPage() {
 
       // Check for the user object in the response
       if (response.user) {
-        // Pass the entire user object to the login function
-        // The useEffect will handle the redirection
         login(response.user);
       }
     } catch (err) {
@@ -98,7 +93,6 @@ export default function SignupPage() {
               />
             </div>
           </div>
-          {/* Display the error message if one exists */}
           {error && (
             <p className="mt-4 text-center text-sm text-red-500">{error}</p>
           )}

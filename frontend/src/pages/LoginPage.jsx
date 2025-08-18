@@ -1,4 +1,3 @@
-// src/pages/LoginPage.jsx
 import { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "@/context/AuthContext";
@@ -9,11 +8,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // We now get the 'user' object from the context, not the token
   const { login, user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // This effect now watches for the user object to change
   useEffect(() => {
     if (user) {
       navigate("/dashboard");
@@ -28,7 +25,6 @@ export default function LoginPage() {
 
       // Check for the user object in the response data
       if (response.user) {
-        // Pass the entire user object to the login function
         login(response.user);
       }
     } catch (err) {

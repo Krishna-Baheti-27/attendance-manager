@@ -1,8 +1,6 @@
-// controllers/calendarController.js
 import { google } from "googleapis";
 import Subject from "../models/subjectModel.js";
 
-// Helper: parse "Attendance Status: PRESENT/ABSENT" and "Note: ..." from description
 function parseDescription(desc = "") {
   const out = { status: undefined, note: "" };
   if (!desc) return out;
@@ -18,7 +16,7 @@ function parseDescription(desc = "") {
   return out;
 }
 
-// ===== CREATE SCHEDULE =====
+// creating the event
 export const createSchedule = async (req, res) => {
   try {
     const user = req.user;
@@ -61,15 +59,15 @@ export const createSchedule = async (req, res) => {
         useDefault: false,
         overrides: [{ method: "popup", minutes: 30 }],
       },
-      // ✅ Store attendance metadata so we can color on the frontend
       extendedProperties: {
         private: {
-          status: (status || "present").toLowerCase(), // "present" | "absent" | anything
+          status: (status || "present").toLowerCase(),
           note: note || "",
         },
       },
     };
 
+    // creating actual calendar event
     await calendar.events.insert({
       calendarId: "primary",
       resource: event,
@@ -103,7 +101,7 @@ function getNextDateTime(dayOfWeek, time) {
   return resultDate.toISOString();
 }
 
-// ===== LIST EVENTS =====
+// list the events
 export const getCalendarEvents = async (req, res) => {
   try {
     const user = req.user;
@@ -142,7 +140,7 @@ export const getCalendarEvents = async (req, res) => {
       const metaNote = event.extendedProperties?.private?.note || "";
       const parsed = parseDescription(desc);
 
-      // Prefer metadata; fall back to parsed description
+      // if meta data fails then go to parsed
       const status = metaStatus || parsed.status || null;
       const note = metaNote || parsed.note || "";
 

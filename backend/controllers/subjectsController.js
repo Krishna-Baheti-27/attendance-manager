@@ -1,4 +1,3 @@
-// controllers/subjectsController.js
 import Subject from "../models/subjectModel.js";
 import Attendance from "../models/attendanceModel.js";
 
@@ -7,13 +6,12 @@ export async function createSubject(req, res) {
     const { name, initialAttended, initialTotal } = req.body;
     const userId = req.user._id;
 
-    // 1. Create the new subject
     const subject = await Subject.create({
       name,
       user: userId,
     });
 
-    // 2. If initial attendance numbers are provided, create the historical records
+    // If initial attendance numbers are provided, create the historical records
     if (initialAttended > 0 || initialTotal > 0) {
       const attendedCount = Number(initialAttended) || 0;
       const totalCount = Number(initialTotal) || 0;
@@ -22,7 +20,6 @@ export async function createSubject(req, res) {
       const attendanceRecords = [];
       const today = new Date();
 
-      // Create "present" records with past dates
       for (let i = 0; i < attendedCount; i++) {
         attendanceRecords.push({
           subject: subject._id,
@@ -33,7 +30,6 @@ export async function createSubject(req, res) {
         });
       }
 
-      // Create "absent" records with past dates
       for (let i = 0; i < absentCount; i++) {
         attendanceRecords.push({
           subject: subject._id,
@@ -51,15 +47,13 @@ export async function createSubject(req, res) {
       }
     }
 
-    // 3. Return the new subject with its stats pre-calculated
-    // This ensures the UI updates correctly without needing a refresh
     const newSubjectWithStats = {
       _id: subject._id,
       name: subject.name,
       user: subject.user,
       attendedClasses: Number(initialAttended) || 0,
       totalClasses: Number(initialTotal) || 0,
-      todaysStatus: null, // It's a new subject, so no status for today
+      todaysStatus: null,
     };
 
     return res.status(201).json({
@@ -74,7 +68,8 @@ export async function createSubject(req, res) {
   }
 }
 
-// The getAllSubjects function remains the same as before
+// Here we are not simply returning all the subjects of particular user but also returning the attendedClasses, totalClasses and todaysStatus so that our frontend does not have again send request to backend for getting data about each subject
+
 export async function getAllSubjects(req, res) {
   try {
     const userId = req.user._id;

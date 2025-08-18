@@ -1,4 +1,3 @@
-// src/components/Navbar.jsx
 import { useState, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";

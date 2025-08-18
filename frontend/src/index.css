@@ -175,3 +175,14 @@
   margin: 2px !important;
   border-radius: 4px !important;
 }
+
+.fc-list-event:hover td {
+  background: inherit !important; /* keep same background */
+  color: inherit !important; /* preserve text color */
+}
+
+.fc-list-event:hover td,
+.fc-list-event:hover .fc-list-event-time,
+.fc-list-event:hover .fc-list-event-title a {
+  color: #111827 !important; /* Tailwind gray-900 */
+}
