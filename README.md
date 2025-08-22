@@ -1,6 +1,8 @@
 Attend.ly - MERN Attendance Manager
 Attend.ly is a full-stack web application designed to help students track their class attendance seamlessly. It features a robust backend built with Node.js/Express and a modern, reactive frontend built with React and Vite. The core functionality is enhanced with Google Calendar integration, allowing users to sync their class schedules and receive automatic reminders.
 
+Check live at - https://attendly-one.vercel.app/
+
 ✨ Features
 Dual Authentication: Secure sign-up and login using either traditional email/password or a Google account.
 
